@@ -33,16 +33,6 @@ export function TlaAppMenuGroup() {
 	)
 }
 
-export function TlaAppMenuGroupLazyFlipped() {
-	return (
-		<TldrawUiMenuGroup id="things-to-do">
-			<ColorThemeSubmenu />
-			<LanguageMenu />
-			<HelpSubMenu />
-		</TldrawUiMenuGroup>
-	)
-}
-
 function ColorThemeSubmenu() {
 	const editor = useMaybeEditor()
 	if (!editor) return null
@@ -81,7 +71,7 @@ function HelpSubMenu() {
 					icon="external-link"
 					readonlyOk
 					onSelect={() => {
-						openAndTrack('https://tldraw.notion.site/terms-and-condition')
+						openAndTrack('https://tldraw.notion.site/terms-of-service')
 					}}
 				/>
 				<TldrawUiMenuItem

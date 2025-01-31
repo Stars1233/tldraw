@@ -54,6 +54,7 @@ export interface Environment {
 	IS_LOCAL: string | undefined
 	WORKER_NAME: string | undefined
 	ASSET_UPLOAD_ORIGIN: string | undefined
+	MULTIPLAYER_SERVER: string | undefined
 
 	RATE_LIMITER: RateLimit
 }
@@ -122,6 +123,7 @@ export type TLUserDurableObjectEvent =
 				| 'reject_mutation'
 				| 'replication_event'
 				| 'connect_retry'
+				| 'user_do_abort'
 			id: string
 	  }
 	| { type: 'reboot_duration'; id: string; duration: number }

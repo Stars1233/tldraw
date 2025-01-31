@@ -74,6 +74,7 @@ interface SlurperOpts {
 
 export async function maybeSlurp(opts: SlurperOpts) {
 	if (opts.abortSignal.aborted) return
+	if (!opts.app.isFileOwner(opts.fileId)) return
 	let persistenceKey = null as string | null
 	if (opts.app._slurpFileId === opts.fileId) {
 		// we just landed on this file after signing in on the root page
@@ -86,7 +87,7 @@ export async function maybeSlurp(opts: SlurperOpts) {
 	}
 }
 
-class Slurper {
+export class Slurper {
 	constructor(private opts: SlurperOpts & { slurpPersistenceKey: string }) {}
 
 	async slurp() {
