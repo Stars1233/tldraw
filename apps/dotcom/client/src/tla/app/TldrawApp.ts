@@ -28,6 +28,7 @@ import {
 	throttle,
 	uniqueId,
 } from '@tldraw/utils'
+import isEqual from 'lodash.isequal'
 import pick from 'lodash.pick'
 import {
 	assertExists,
@@ -93,7 +94,7 @@ export class TldrawApp {
 	private signalizeQuery<TReturn>(name: string, query: any): Signal<TReturn> {
 		// fail if closed?
 		const view = query.materialize()
-		const val$ = atom(name, view.data)
+		const val$ = atom(name, view.data, { isEqual })
 		view.addListener((res: any) => {
 			this.changes.set(val$, structuredClone(res))
 			if (!this.changesFlushed) {
@@ -182,8 +183,8 @@ export class TldrawApp {
 			updateLocalSessionState((state) => ({ ...state, shouldShowWelcomeDialog: true }))
 		}
 		await new Promise((resolve) => {
-			let unsub = () => {}
-			unsub = react('wait for user', () => this.user$.get() && resolve(unsub()))
+			let unlisten = () => {}
+			unlisten = react('wait for user', () => this.user$.get() && resolve(unlisten()))
 		})
 		if (!this.user$.get()) {
 			throw Error('could not create user')
@@ -305,7 +306,7 @@ export class TldrawApp {
 		date: number
 	}>
 
-	@computed
+	@computed({ isEqual })
 	getUserRecentFiles() {
 		const myFiles = objectMapFromEntries(this.getUserOwnFiles().map((f) => [f.id, f]))
 		const myStates = objectMapFromEntries(this.getUserFileStates().map((f) => [f.fileId, f]))
@@ -423,7 +424,7 @@ export class TldrawApp {
 			lastSessionState: null,
 			lastVisitAt: null,
 		}
-		await this.z.mutate.file.insertWithFileState({ file, fileState })
+		this.z.mutate.file.insertWithFileState({ file, fileState })
 		// todo: add server error handling for real Zero
 		// .server.catch((res: { error: string; details: string }) => {
 		// 	if (res.details === ZErrorCode.max_files_reached) {
@@ -691,7 +692,7 @@ export class TldrawApp {
 			exportFormat: 'png',
 			exportTheme: 'light',
 			exportBackground: false,
-			exportPadding: false,
+			exportPadding: true,
 			createdAt: Date.now(),
 			updatedAt: Date.now(),
 			flags: '',
@@ -744,7 +745,7 @@ export class TldrawApp {
 		let didFinishUploading = false
 
 		// give it a second before we show the toast, in case the upload is fast
-		setTimeout(() => {
+		const uploadingToastTimeout = setTimeout(() => {
 			if (didFinishUploading || this.abortController.signal.aborted) return
 			// if it's close to the end, don't show the progress toast
 			if (getApproxPercentage() > 50) return
@@ -780,6 +781,7 @@ export class TldrawApp {
 				updateProgress()
 			}).catch((e) => Result.err(e))
 			if (!res.ok) {
+				clearTimeout(uploadingToastTimeout)
 				if (uploadingToastId) this.toasts?.removeToast(uploadingToastId)
 				this.toasts?.addToast({
 					severity: 'error',
